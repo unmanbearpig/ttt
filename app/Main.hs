@@ -6,8 +6,6 @@ module Main where
 import Lib
 import qualified Data.Text as T
 import Text.Printf (printf)
--- import qualified Data.Array as A
--- import qualified Data.Vector as V
 import System.IO
 import Control.Lens
 import Control.Monad
@@ -15,13 +13,8 @@ import Control.Monad
 data Player = Player { name :: String, char :: Char } deriving (Show)
 makeLenses ''Player
 
-
-data Coordinates = Coordinates Int deriving (Eq)
-
-mapC :: (Int -> Int) -> Coordinates -> Coordinates
-mapC f (Coordinates x) = Coordinates (f x)
-moveC :: Int -> Coordinates -> Coordinates
-moveC x = mapC (+ x)
+data Coordinates = Coordinates { _xC :: Int } deriving (Eq)
+makeLenses ''Coordinates
 
 data Board = Board { _size :: Int
                    , _playerCoordinates :: Coordinates
@@ -39,7 +32,7 @@ renderPlayer :: Player -> Char
 renderPlayer = char
 
 listBoardCoordinates :: Board -> [Coordinates]
-listBoardCoordinates b = map Coordinates [0..(view size b)-1]
+listBoardCoordinates b = map Coordinates [0..(b^.size)-1]
 
 newBoard :: Int -> Board
 newBoard size = Board size (Coordinates 0) (Player "blah" '@')
@@ -54,7 +47,7 @@ renderBoard :: Board -> String
 renderBoard b = "|" ++ boardChars b ++ "|"
 
 processCommand :: Board -> Command -> Board
-processCommand b (Move x) = over playerCoordinates (moveC x) b
+processCommand b (Move x) = over (playerCoordinates . xC) (+ x) b
 processCommand b _ = b
 
 getCommand :: IO Command
@@ -72,6 +65,7 @@ doATurn b = getCommand
 main :: IO ()
 main = hSetBuffering stdin NoBuffering
        >> hSetEcho stdin False
+       >> printBoard initialBoard
        >> return initialBoard
        >>= \b -> foldM_ ((flip . const) doATurn) b [0..]
 
