@@ -72,9 +72,9 @@ doATurn b = getCommand
 main :: IO ()
 main = hSetBuffering stdin NoBuffering
        >> hSetEcho stdin False
-       >> return (newBoard size)
-       >>= \b -> foldM_ (\bb _ -> doATurn bb) b [0..]
+       >> return initialBoard
+       >>= \b -> foldM_ ((flip . const) doATurn) b [0..]
 
-       -- >>= \board -> (putStrLn $ renderBoard board)
-       -- >>= \board -> getChar >>= \c -> snd $ play c (board, putStrLn "fuc")
-  where size = 70
+  where
+    initialBoard = (newBoard size)
+    size = 70
