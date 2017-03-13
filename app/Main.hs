@@ -28,11 +28,11 @@ data Board = Board { _size :: Int
                    , _player :: Player }
 makeLenses ''Board
 
-data Command = MoveForward | MoveBackward | NoOp
+data Command = Move Int | MoveBackward | NoOp
 
 parse :: Char -> Command
-parse 'n' = MoveForward
-parse 'p' = MoveBackward
+parse 'n' = Move 1
+parse 'p' = Move (-1)
 parse _   = NoOp
 
 renderPlayer :: Player -> Char
@@ -53,10 +53,9 @@ boardChars b = map (maybe '.' renderPlayer) $ map (queryBoard b) $ listBoardCoor
 renderBoard :: Board -> String
 renderBoard b = "|" ++ boardChars b ++ "|"
 
-executeCommand :: Board -> Command -> Board
-executeCommand b MoveForward = over playerCoordinates (moveC 1) b
-executeCommand b MoveBackward = over playerCoordinates (moveC (-1)) b
-executeCommand b _ = b
+processCommand :: Board -> Command -> Board
+processCommand b (Move x) = over playerCoordinates (moveC x) b
+processCommand b _ = b
 
 getCommand :: IO Command
 getCommand = getChar >>= \c -> return $ parse c
@@ -66,7 +65,7 @@ printBoard = putStrLn . renderBoard
 
 doATurn :: Board -> IO Board
 doATurn b = getCommand
-            >>= (\c -> return $ executeCommand b c)
+            >>= (\c -> return $ processCommand b c)
             >>= (\nb -> printBoard nb >> return nb)
 
 
