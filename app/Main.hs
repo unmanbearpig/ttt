@@ -5,49 +5,61 @@ module Main where
 
 import Lib
 import qualified Data.Text as T
+import Data.List
 import Text.Printf (printf)
 import System.IO
 import Control.Lens
 import Control.Monad
+import Control.Applicative
 
 data Player = Player { name :: String, char :: Char } deriving (Show)
 makeLenses ''Player
 
-data Coordinates = Coordinates { _xC :: Int } deriving (Eq)
+data Coordinates = Coordinates { _xC :: Int, _yC :: Int } deriving (Eq)
 makeLenses ''Coordinates
+
+(+%+) :: Coordinates -> Coordinates -> Coordinates
+a +%+ b = Coordinates (a^.xC + b^.xC) (a^.yC + b^.yC)
 
 data Board = Board { _size :: Coordinates
                    , _playerCoordinates :: Coordinates
                    , _player :: Player }
 makeLenses ''Board
 
-data Command = Move Int | MoveBackward | NoOp
+data Command = Move Coordinates | MoveBackward | NoOp
 
 parse :: Char -> Command
-parse 'n' = Move 1
-parse 'p' = Move (-1)
+parse 'n' = Move $ Coordinates 0 1
+parse 'p' = Move $ Coordinates 0 (-1)
+parse 'f' = Move $ Coordinates 1 0
+parse 'b' = Move $ Coordinates (-1) 0
 parse _   = NoOp
 
 renderPlayer :: Player -> Char
 renderPlayer = char
 
 listBoardCoordinates :: Board -> [Coordinates]
-listBoardCoordinates b = map Coordinates [0..(b^.size.xC)-1]
+listBoardCoordinates b = liftA2 Coordinates [0..(b^.size.xC-1)] [0..(b^.size.yC)-1]
 
 newBoard :: Coordinates -> Board
-newBoard size = Board size (Coordinates 0) (Player "blah" '@')
+newBoard size = Board size (Coordinates 0 0) (Player "blah" '@')
 
 queryBoard :: Board -> Coordinates -> Maybe Player
-queryBoard b c = if c == view playerCoordinates b then Just $ view player b else Nothing
+queryBoard b c = if c == b^.playerCoordinates then Just $ b^.player else Nothing
 
-boardChars :: Board -> String
-boardChars b = map (maybe '.' renderPlayer) $ map (queryBoard b) $ listBoardCoordinates b
+boardRows :: Board -> [String]
+boardRows b = map (map (renderBoardCell b)) $ groupBy (\ac bc -> ac^.xC == bc^.xC) $ listBoardCoordinates b
+
+renderBoardCell :: Board -> Coordinates -> Char
+renderBoardCell b c = maybe ' ' renderPlayer $ queryBoard b c
 
 renderBoard :: Board -> String
-renderBoard b = "|" ++ boardChars b ++ "|"
+renderBoard b = join $ intersperse "\n" ([horizontalBorder] ++ rows ++ [horizontalBorder])
+  where rows = map (\str -> "|" ++ str ++ "|") $ boardRows b :: [String]
+        horizontalBorder = replicate (b^.size.yC + 2) '-'
 
 processCommand :: Board -> Command -> Board
-processCommand b (Move x) = over (playerCoordinates . xC) (+ x) b
+processCommand b (Move c) = over (playerCoordinates) (+%+ c) b
 processCommand b _ = b
 
 getCommand :: IO Command
@@ -71,4 +83,4 @@ main = hSetBuffering stdin NoBuffering
 
   where
     initialBoard = (newBoard size)
-    size = Coordinates 70
+    size = Coordinates 40 70
