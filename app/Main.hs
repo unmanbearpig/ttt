@@ -16,7 +16,7 @@ makeLenses ''Player
 data Coordinates = Coordinates { _xC :: Int } deriving (Eq)
 makeLenses ''Coordinates
 
-data Board = Board { _size :: Int
+data Board = Board { _size :: Coordinates
                    , _playerCoordinates :: Coordinates
                    , _player :: Player }
 makeLenses ''Board
@@ -32,9 +32,9 @@ renderPlayer :: Player -> Char
 renderPlayer = char
 
 listBoardCoordinates :: Board -> [Coordinates]
-listBoardCoordinates b = map Coordinates [0..(b^.size)-1]
+listBoardCoordinates b = map Coordinates [0..(b^.size.xC)-1]
 
-newBoard :: Int -> Board
+newBoard :: Coordinates -> Board
 newBoard size = Board size (Coordinates 0) (Player "blah" '@')
 
 queryBoard :: Board -> Coordinates -> Maybe Player
@@ -71,4 +71,4 @@ main = hSetBuffering stdin NoBuffering
 
   where
     initialBoard = (newBoard size)
-    size = 70
+    size = Coordinates 70
