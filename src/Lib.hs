@@ -14,31 +14,29 @@ import Control.Lens
 import Control.Monad
 import Control.Applicative
 
-data Player = Player { _name :: String, _char :: Char } deriving (Show)
+data Player = Player { _name :: String, _char :: Char, _playerCoordinates :: Coordinates } deriving (Show)
 makeLenses ''Player
 
 data Board = Board { _size :: Coordinates
-                   , _playerCoordinates :: Coordinates
                    , _player :: Player }
 makeLenses ''Board
 
-renderPlayer :: Player -> Char
-renderPlayer = view char
+renderPlayer :: Coordinates -> Player -> Maybe Char
+renderPlayer c p
+  | p^.playerCoordinates == c = Just (p^.char)
+  | otherwise  = Nothing
 
 listBoardCoordinates :: Board -> [Coordinates]
 listBoardCoordinates b = liftA2 Coordinates [0..(b^.size.xC-1)] [0..(b^.size.yC)-1]
 
 newBoard :: Coordinates -> Board
-newBoard size = Board size (Coordinates 0 0) (Player "blah" '@')
-
-queryBoard :: Board -> Coordinates -> Maybe Player
-queryBoard b c = if c == b^.playerCoordinates then Just $ b^.player else Nothing
+newBoard size = Board size (Player "blah" '@' (Coordinates 0 0))
 
 boardRows :: Board -> [String]
 boardRows b = map (map (renderBoardCell b)) $ groupBy (\ac bc -> ac^.xC == bc^.xC) $ listBoardCoordinates b
 
 renderBoardCell :: Board -> Coordinates -> Char
-renderBoardCell b c = maybe ' ' renderPlayer $ queryBoard b c
+renderBoardCell b c = maybe ' ' id $ renderPlayer c (b^.player)
 
 renderBoard :: Board -> String
 renderBoard b = join $ intersperse "\n" ([horizontalBorder] ++ rows ++ [horizontalBorder])
@@ -46,7 +44,7 @@ renderBoard b = join $ intersperse "\n" ([horizontalBorder] ++ rows ++ [horizont
         horizontalBorder = replicate (b^.size.yC + 2) '-'
 
 processCommand :: Board -> Command -> Board
-processCommand b (Move c) = over (playerCoordinates) (+%+ c) b
+processCommand b (Move c) = over (player.playerCoordinates) (+%+ c) b
 processCommand b _ = b
 
 printBoard :: Board -> IO ()
