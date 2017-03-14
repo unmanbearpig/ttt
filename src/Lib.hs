@@ -21,8 +21,8 @@ data Board = Board { _size :: Coordinates
                    , _player :: Player }
 makeLenses ''Board
 
-renderPlayer :: Coordinates -> Player -> Maybe Char
-renderPlayer c p
+renderPlayer :: Player -> Coordinates -> Maybe Char
+renderPlayer p c
   | p^.playerCoordinates == c = Just (p^.char)
   | otherwise  = Nothing
 
@@ -36,7 +36,7 @@ boardRows :: Board -> [String]
 boardRows b = map (map (renderBoardCell b)) $ groupBy (\ac bc -> ac^.xC == bc^.xC) $ listBoardCoordinates b
 
 renderBoardCell :: Board -> Coordinates -> Char
-renderBoardCell b c = maybe ' ' id $ renderPlayer c (b^.player)
+renderBoardCell b c = maybe ' ' id $ renderPlayer (b^.player) c
 
 renderBoard :: Board -> String
 renderBoard b = join $ intersperse "\n" ([horizontalBorder] ++ rows ++ [horizontalBorder])
