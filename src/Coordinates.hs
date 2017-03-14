@@ -9,3 +9,6 @@ makeLenses ''Coordinates
 
 (+%+) :: Coordinates -> Coordinates -> Coordinates
 a +%+ b = Coordinates (a^.xC + b^.xC) (a^.yC + b^.yC)
+
+instance Show Coordinates where
+  show (Coordinates x y) = "(" ++ show x ++ "x" ++ show y ++ ")"
