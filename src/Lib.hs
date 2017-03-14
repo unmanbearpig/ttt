@@ -63,11 +63,8 @@ processCommand :: Board -> Command -> Board
 processCommand b (Move c) = over (playerCoordinates) (+%+ c) b
 processCommand b _ = b
 
-getCommand :: IO Command
-getCommand = getChar >>= \c -> return $ parse c
-
 printBoard :: Board -> IO ()
-printBoard = putStrLn . renderBoard
+printBoard b = putStr "\ESC[0;0f" >> (putStrLn . renderBoard) b
 
 doATurn :: Board -> IO Board
 doATurn b = getCommand
