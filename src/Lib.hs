@@ -14,17 +14,20 @@ import Control.Lens
 import Control.Monad
 import Control.Applicative
 
+class GameObject t where
+  render :: t -> Coordinates -> Maybe Char
+
 data Player = Player { _name :: String, _char :: Char, _playerCoordinates :: Coordinates } deriving (Show)
 makeLenses ''Player
+
+instance GameObject Player where
+  render p c
+    | p^.playerCoordinates == c = Just (p^.char)
+    | otherwise  = Nothing
 
 data Board = Board { _size :: Coordinates
                    , _player :: Player }
 makeLenses ''Board
-
-renderPlayer :: Player -> Coordinates -> Maybe Char
-renderPlayer p c
-  | p^.playerCoordinates == c = Just (p^.char)
-  | otherwise  = Nothing
 
 listBoardCoordinates :: Board -> [Coordinates]
 listBoardCoordinates b = liftA2 Coordinates [0..(b^.size.xC-1)] [0..(b^.size.yC)-1]
@@ -36,7 +39,7 @@ boardRows :: Board -> [String]
 boardRows b = map (map (renderBoardCell b)) $ groupBy (\ac bc -> ac^.xC == bc^.xC) $ listBoardCoordinates b
 
 renderBoardCell :: Board -> Coordinates -> Char
-renderBoardCell b c = maybe ' ' id $ renderPlayer (b^.player) c
+renderBoardCell b c = maybe ' ' id $ render (b^.player) c
 
 renderBoard :: Board -> String
 renderBoard b = join $ intersperse "\n" ([horizontalBorder] ++ rows ++ [horizontalBorder])
