@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Lib
-    ( Coordinates(..), newBoard, printBoard, doATurn
+    ( Coordinates(..), newBoard, printBoard, play
     ) where
 
 import qualified Data.Text as T
@@ -50,7 +50,5 @@ processCommand b _ = b
 printBoard :: Board -> IO ()
 printBoard b = putStr "\ESC[0;0f" >> (putStrLn . renderBoard) b
 
-doATurn :: Board -> IO Board
-doATurn b = getCommand
-            >>= (\c -> return $ processCommand b c)
-            >>= (\nb -> printBoard nb >> return nb)
+play :: Board -> IO Board
+play b = printBoard b >> processCommand b <$> getCommand >>= play

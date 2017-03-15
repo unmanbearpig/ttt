@@ -9,8 +9,8 @@ main = hSetBuffering stdin NoBuffering
        >> hSetEcho stdin False
        >> putStr "\ESC[2J"
        >> printBoard initialBoard
-       >> return initialBoard
-       >>= \b -> foldM_ ((flip . const) doATurn) b [0..]
+       >> play initialBoard
+       >> return ()
 
   where
     initialBoard = (newBoard size)
